@@ -152,3 +152,9 @@ if __name__ == '__main__':
     syslog.sd = True # 
     logger.info('[ourSDID@32473 super="cala" fraja="listic"]')
 
+
+    #grep CoolApp /var/log/messages::
+    
+    #<14>1 2019-06-12T22:07:17.772Z img0 CoolApp TAG INFO - A basic message, without structured-data
+    #<14>1 2019-06-12T22:07:17.772Z img0 CoolApp TAG INFO [ourSDID@32473 super="cala" fraja="listic"] 
+
