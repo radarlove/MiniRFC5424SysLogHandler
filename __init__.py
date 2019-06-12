@@ -10,7 +10,7 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
     RFC5424 compliant messages whether wanting to use STRUCTURED-DATA or not.
 
     This subclasses that handler and overrides emit() in order to generate
-    compliant messages.
+    compliant messages with a minimalistic approach.
 
     The MiniSysLogHandler accepts arguments like MSGID at initialization, so no
     arguments or dictionaries need to be added to every invocation.  The normal
@@ -29,16 +29,19 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
     but changes the call signature to one requiring other arguments (e.g.
     extra=somedict)
 
-    That library also has external dependencies on pytz and won't run on Python
-    2.6 due to a dependency on OrderedDict.
+    That library also has external dependencies on pytz.
+
+    This one assumes Zulu time, or UTC.
+
+	formatter.converter = time.gmtime
 
     """
   
     def __init__(self,
-                address=('127.0.0.1', 514),
                 appname = '-',
                 procid = '-',
                 msgid = '-',
+                address=('127.0.0.1', 514),
                 sd=False):
         """ Allow setting of APPNAME, PROCID, and MSGID at init. 
         XXX This version actually always sets MSGID to the loglevel (eg INFO, CRIT)        
@@ -49,7 +52,7 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
         self.msgid = msgid
         self.procid = procid
         self.sd = sd
-        super(MiniSysLogHandler, self).__init__(address=self.address)
+        super(MiniSysLogHandler, self).__init__()
     
     def get_timestamp(self, record):
         """ RFC 5424 timestamp with milliseconds from the LogRecord.  There is only ZULU time. """
@@ -68,11 +71,8 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
         exception information is present, it is NOT sent to the server.
         """
         try:
-            msg = self.format(record)
-            if self.ident:
-                msg = self.ident + msg
-            if self.append_nul:
-                msg += '\000'
+
+            msg = self.format(record) + '\000'
 
             # We need to convert record level to lowercase, maybe this will
             # change in the future.
@@ -81,7 +81,10 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
                                 self.facility,
                                 self.mapPriority(record.levelname))
 
-            prio = prio.encode('utf-8')
+
+            if type(msg) is unicode:
+                msg = msg.encode('utf-8')
+            ts = self.get_timestamp(record)
 
             # Message is a string. Convert to bytes as required by RFC 5424
             msg = msg.encode('utf-8')
@@ -94,15 +97,13 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
                                                    record.levelname,
                                                    msg)
             else:
-                msg = prio + '%s %s %s %s - %s' % (ts,
+                msg = prio + '%s %s %s %s %s - %s' % (ts,
                                                    fqdn,
                                                    self.appname,
                                                    self.procid,
                                                    record.levelname,
                                                    msg)
-            
                 
-            msg = prio + msg
             if self.unixsocket:
                 try:
                     self.socket.send(msg)
@@ -122,11 +123,11 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
 if __name__ == '__main__':
 
     logger = logging.getLogger('minilogger')
-    syslog = MiniSysLogHandler(appname='CoolApp', procid='TAG', sd=False)
+    syslog = MiniSysLogHandler(appname='CoolApp', procid='TAG')
     logger.addHandler(syslog)
     logger.setLevel(logging.INFO)
-    logger.info(' A basic message, without structured-data')
-    logger.sd = True  # 
+    logger.info('A basic message, without structured-data')
+    syslog.sd = True # 
     logger.info('[ourSDID@32473 super="cala" fraja="listic"]')
 
 
