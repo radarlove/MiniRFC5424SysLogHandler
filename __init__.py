@@ -12,6 +12,12 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
     This subclasses that handler and overrides emit() in order to generate
     compliant messages with a minimalistic approach.
 
+    Using the following in rsyslog.conf::
+
+	$ActionFileDefaultTemplate RSYSLOG_SyslogProtocol23Format
+
+    will print the full message to /var/log/messages or similar.
+
     The MiniSysLogHandler accepts arguments like MSGID at initialization, so no
     arguments or dictionaries need to be added to every invocation.  The normal
     call signature is used::
@@ -34,6 +40,26 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
     This one assumes Zulu time, or UTC.
 
 	formatter.converter = time.gmtime
+
+
+    Sample usage::
+
+            if __name__ == '__main__':
+
+                logger = logging.getLogger('minilogger')
+                syslog = MiniSysLogHandler(appname='CoolApp', procid='TAG')
+                logger.addHandler(syslog)
+                logger.setLevel(logging.INFO)
+                logger.info('A basic message, without structured-data')
+                syslog.sd = True # 
+                logger.info('[ourSDID@32473 super="cala" fraja="listic"]')
+
+    /var/log/messages::
+	
+	<14>1 2019-06-12T22:07:17.772Z img0 CoolApp TAG INFO - A basic message, without structured-data
+	<14>1 2019-06-12T22:07:17.772Z img0 CoolApp TAG INFO [ourSDID@32473 super="cala" fraja="listic"] 
+
+    
 
     """
   
@@ -129,7 +155,4 @@ if __name__ == '__main__':
     logger.info('A basic message, without structured-data')
     syslog.sd = True # 
     logger.info('[ourSDID@32473 super="cala" fraja="listic"]')
-
-
-
 
