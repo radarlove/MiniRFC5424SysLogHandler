@@ -39,8 +39,6 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
 
     This one assumes Zulu time, or UTC.
 
-	formatter.converter = time.gmtime
-
 
     Sample usage::
 
@@ -58,8 +56,6 @@ class MiniSysLogHandler(logging.handlers.SysLogHandler):
 	
 	<14>1 2019-06-12T22:07:17.772Z img0 CoolApp TAG INFO - A basic message, without structured-data
 	<14>1 2019-06-12T22:07:17.772Z img0 CoolApp TAG INFO [ourSDID@32473 super="cala" fraja="listic"] 
-
-    
 
     """
   
